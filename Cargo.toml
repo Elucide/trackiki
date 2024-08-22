@@ -1,4 +1,3 @@
-workspace = { members = [ "learning_rust/guessing_game","learning_rust/test_rust"] }
 [package]
 name = "trakiki"
 version = "0.1.0"

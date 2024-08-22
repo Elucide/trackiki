@@ -1,50 +1,53 @@
-use std::io;
+use std::io::{stdout, Result};
 
-use ratatui::{
-    buffer::Buffer,
-    crossterm::event::{self, Event, KeyCode, KeyEvent, KeyEventKind},
-    layout::{Alignment, Rect},
-    style::Stylize,
-    symbols::border,
-    text::{Line, Text},
-    widgets::{
-        block::{Position, Title},
-        Block, Paragraph, Widget,
+use ratatui::
+{
+    backend::CrosstermBackend,
+    crossterm::
+    {
+        event::{self, KeyCode, KeyEventKind},
+        terminal::{disable_raw_mode, enable_raw_mode, EnterAlternateScreen, LeaveAlternateScreen},
+        ExecutableCommand,
     },
-    Frame,
+    style::Stylize,
+    widgets::Paragraph,
+    Terminal,
 };
 
-mod tui;
+fn main() -> Result<()>
+{
+    stdout().execute(EnterAlternateScreen)?;
+    enable_raw_mode()?;
+    let mut terminal = Terminal::new(CrosstermBackend::new(stdout()))?;
+    terminal.clear()?;
 
-fn main() -> io::Result<()> {
-    let mut terminal = tui::init()?;
-    let app_result = App::default().run(&mut terminal);
-    tui::restore()?;
-    app_result
-}
+    loop
+    {
+        terminal.draw(|frame|
+        {
+            let area = frame.area();
+            frame.render_widget(
+                Paragraph::new("TRAKIKI")
+                    .white()
+                    .on_black(),
+                area,
+            );
+        })?;
 
-#[derive(Debug, Default)]
-pub struct App {
-    counter: u8,
-    exit: bool,
-}
-
-impl App {
-    /// runs the application's main loop until the user quits
-    pub fn run(&mut self, terminal: &mut tui::Tui) -> io::Result<()> {
-        while !self.exit {
-            terminal.draw(|frame| self.render_frame(frame))?;
-            self.handle_events()?;
+        if event::poll(std::time::Duration::from_millis(16))?
+        {
+            if let event::Event::Key(key) = event::read()?
+            {
+                if key.kind == KeyEventKind::Press && key.code == KeyCode::Char('q')
+                {
+                    break;
+                }
+            }
         }
-        Ok(())
+
     }
 
-    fn render_frame(&self, frame: &mut Frame) {
-        todo!()
-    }
-
-    fn handle_events(&mut self) -> io::Result<()> {
-        todo!()
-    }
+    stdout().execute(LeaveAlternateScreen)?;
+    disable_raw_mode()?;
+    Ok(())
 }
-
